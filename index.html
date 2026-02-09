@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KACLiF-ACLF Risk Calculator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 700px;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        label {
+            font-weight: 600;
+            flex: 1;
+        }
+        input[type="number"] {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 150px;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #result-area {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e8f6f3;
+            border: 1px solid #d1f2eb;
+            border-radius: 5px;
+            display: none; /* Hidden by default */
+        }
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #d1f2eb;
+            padding: 10px 0;
+        }
+        .result-row:last-child {
+            border-bottom: none;
+        }
+        .score-val {
+            font-size: 20px;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        .risk-val {
+            font-weight: bold;
+            color: #27ae60;
+        }
+        .disclaimer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #95a5a6;
+            line-height: 1.5;
+            text-align: justify;
+        }
+        .note {
+            font-size: 13px;
+            color: #555;
+            margin-top: 10px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>KACLiF-ACLF Risk Calculator</h1>
+    <div class="subtitle">Prediction of Acute-on-Chronic Liver Failure (ACLF) Development</div>
+    
+    <div class="input-group">
+        <label for="crp">C-reactive Protein (mg/dL)</label>
+        <input type="number" id="crp" placeholder="e.g. 1.0" step="0.01">
+    </div>
+    <div class="input-group">
+        <label for="alb">Albumin (g/dL)</label>
+        <input type="number" id="alb" placeholder="e.g. 3.5" step="0.1">
+    </div>
+    <div class="input-group">
+        <label for="inr">INR</label>
+        <input type="number" id="inr" placeholder="e.g. 1.2" step="0.01">
+    </div>
+    <div class="input-group">
+        <label for="bil">Total Bilirubin (mg/dL)</label>
+        <input type="number" id="bil" placeholder="e.g. 2.0" step="0.1">
+    </div>
+    <div class="input-group">
+        <label for="cr">Creatinine (mg/dL)</label>
+        <input type="number" id="cr" placeholder="e.g. 1.0" step="0.01">
+    </div>
+
+    <button onclick="calculateRisk()">Calculate Risk</button>
+
+    <div id="result-area">
+        <div class="result-row">
+            <span><strong>KACLiF-ACLF Score</strong></span>
+            <span id="scoreDisplay" class="score-val">--</span>
+        </div>
+        <div class="result-row">
+            <span>28-day Probability</span>
+            <span id="risk28" class="risk-val">--%</span>
+        </div>
+        <div class="result-row">
+            <span>90-day Probability</span>
+            <span id="risk90" class="risk-val">--%</span>
+        </div>
+        <div class="result-row">
+            <span>1-year Probability</span>
+            <span id="risk360" class="risk-val">--%</span>
+        </div>
+        <div class="note">
+            * This probability represents the <strong>cumulative incidence</strong> of ACLF, accounting for the competing risk of death or liver transplantation without ACLF.
+        </div>
+    </div>
+
+    <div class="disclaimer">
+        <strong>Disclaimer:</strong> This tool is intended for use by healthcare professionals for research and educational purposes only. It is not a substitute for professional medical advice, diagnosis, or treatment. The estimated risks are based on statistical models derived from specific patient cohorts and may not apply to all clinical scenarios.
+    </div>
+</div>
+
+<script>
+    function calculateRisk() {
+        // --- [Update Parameters Here] ---
+        // Replace these values with the output from your R script
+        const BETA   = 0.08;      // <-- Put your Beta value here
+        const H0_28  = 0.0004;    // <-- Put your H0_28 value here
+        const H0_90  = 0.0012;    // <-- Put your H0_90 value here
+        const H0_360 = 0.0050;    // <-- Put your H0_360 value here
+        // --------------------------------
+        
+        // 1. Get Input Values
+        const crp = parseFloat(document.getElementById('crp').value);
+        const alb = parseFloat(document.getElementById('alb').value);
+        const inr = parseFloat(document.getElementById('inr').value);
+        const bil = parseFloat(document.getElementById('bil').value);
+        const cr  = parseFloat(document.getElementById('cr').value);
+
+        // 2. Validation
+        if (isNaN(crp) || isNaN(alb) || isNaN(inr) || isNaN(bil) || isNaN(cr)) {
+            alert("Please enter valid numeric values for all fields.");
+            return;
+        }
+        if (crp <= 0 || bil <= 0) {
+            alert("CRP and Bilirubin must be greater than 0 for logarithmic calculation.");
+            return;
+        }
+
+        // 3. Calculate Score
+        // Formula: 3.86*log10(CRP) - 4.28*Alb + 4.92*INR + 14.35*log10(Bil) + 10.68*Cr + 40
+        const score = (3.86 * Math.log10(crp)) - 
+                      (4.28 * alb) + 
+                      (4.92 * inr) + 
+                      (14.35 * Math.log10(bil)) + 
+                      (10.68 * cr) + 
+                      40;
+
+        // 4. Calculate Risk (Fine-Gray Formula)
+        // Risk = 1 - exp( - H0 * exp( Beta * Score ) )
+        const exponent = Math.exp(BETA * score);
+        
+        const r28  = 1 - Math.exp(-H0_28  * exponent);
+        const r90  = 1 - Math.exp(-H0_90  * exponent);
+        const r360 = 1 - Math.exp(-H0_360 * exponent);
+
+        // 5. Display Results
+        document.getElementById('scoreDisplay').innerText = score.toFixed(2);
+        document.getElementById('risk28').innerText = (r28 * 100).toFixed(1) + "%";
+        document.getElementById('risk90').innerText = (r90 * 100).toFixed(1) + "%";
+        document.getElementById('risk360').innerText = (r360 * 100).toFixed(1) + "%";
+
+        // Show result area
+        document.getElementById('result-area').style.display = "block";
+    }
+</script>
+
+</body>
+</html>
