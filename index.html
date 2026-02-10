@@ -209,7 +209,7 @@
         const r360 = 1 - Math.exp(-H0_360 * exponent);
 
         // 5. Display Results
-        document.getElementById('scoreDisplay').innerText = score.toFixed(2);
+        document.getElementById('scoreDisplay').innerText = score.toFixed(1);
         document.getElementById('risk28').innerText = (r28 * 100).toFixed(1) + "%";
         document.getElementById('risk90').innerText = (r90 * 100).toFixed(1) + "%";
         document.getElementById('risk360').innerText = (r360 * 100).toFixed(1) + "%";
@@ -222,3 +222,4 @@
 </body>
 
 </html>
+
