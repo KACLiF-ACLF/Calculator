@@ -150,10 +150,6 @@
             <span>90-day Probability</span>
             <span id="risk90" class="risk-val">--%</span>
         </div>
-        <div class="result-row">
-            <span>1-year Probability</span>
-            <span id="risk360" class="risk-val">--%</span>
-        </div>
         <div class="note">
             * This probability represents the <strong>cumulative incidence</strong> of ACLF, accounting for the competing risk of death or liver transplantation without ACLF.
         </div>
@@ -168,10 +164,9 @@
     function calculateRisk() {
         // --- [Update Parameters Here] ---
         // Replace these values with the output from your R script
-        const BETA   = 0.1029882;      // <-- Put your Beta value here
-        const H0_28  = 0.0002320114;    // <-- Put your H0_28 value here
-        const H0_90  = 0.0003277859;    // <-- Put your H0_90 value here
-        const H0_360 = 0.0004329855;    // <-- Put your H0_360 value here
+        const BETA   = 0.1047317 ;      // <-- Put your Beta value here
+        const H0_28  = 0.0002188322 ;    // <-- Put your H0_28 value here
+        const H0_90  = 0.000309139 ;    // <-- Put your H0_90 value here
         // --------------------------------
         
         // 1. Get Input Values
@@ -206,13 +201,11 @@
         
         const r28  = 1 - Math.exp(-H0_28  * exponent);
         const r90  = 1 - Math.exp(-H0_90  * exponent);
-        const r360 = 1 - Math.exp(-H0_360 * exponent);
 
         // 5. Display Results
         document.getElementById('scoreDisplay').innerText = score.toFixed(1);
         document.getElementById('risk28').innerText = (r28 * 100).toFixed(1) + "%";
         document.getElementById('risk90').innerText = (r90 * 100).toFixed(1) + "%";
-        document.getElementById('risk360').innerText = (r360 * 100).toFixed(1) + "%";
 
         // Show result area
         document.getElementById('result-area').style.display = "block";
